@@ -4,13 +4,15 @@ import "./globals.css"
 import { CommandMenu } from "@/components/menu/command/command-menu"
 import { CommonMenubar } from "@/components/menu/menubar/default-menubar"
 import CommonProvider from "@/components/provider"
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup, ToggleableResizablePanel } from "@/components/ui/resizable"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Toaster } from "@/components/ui/sonner"
+import { DraggableBoundary } from "@/lib/draggable/draggable-boundary"
 import { cn } from "@/lib/utils"
-import { Suspense } from "react"
-import Loading from "./loading"
+import { Home } from "lucide-react"
 import { Metadata } from "next"
+import React, { Suspense } from "react"
+import Loading from "./loading"
 
 export const fontSans = FontSans({
   subsets: ["latin"],
@@ -38,18 +40,17 @@ function SideBar() {
 function Content({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={<Loading />}>
-      <div className="h-full w-full">
+      <DraggableBoundary className="h-full w-full flex flex-col justify-center" padding={20}>
         <CommandMenu />
-        <ScrollArea>
-          {children}
-        </ScrollArea>
+        {children}
         <Toaster />
-      </div>
+      </DraggableBoundary>
     </Suspense>
   );
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -69,16 +70,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             className="flex-grow rounded-lg"
             direction="horizontal"
           >
-            <ResizablePanel
+            <ToggleableResizablePanel
               defaultSize={20}
               className="flex-grow border"
-              minSize={4}
+              minSize={20}
               maxSize={20}
+              collapsible
+              collapsedSize={4}
+              toggleButton={<Home />}
             >
               <ScrollArea>
                 <SideBar />
               </ScrollArea>
-            </ResizablePanel>
+            </ToggleableResizablePanel>
             <ResizableHandle />
             <ResizablePanel
               defaultSize={80}

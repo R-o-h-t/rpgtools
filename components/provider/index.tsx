@@ -1,3 +1,5 @@
+'use client'
+import { useHotkeys } from "react-hotkeys-hook";
 import { ThemeProvider } from "./theme-provider";
 
 export { ThemeProvider }

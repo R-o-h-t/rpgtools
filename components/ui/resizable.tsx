@@ -4,6 +4,8 @@ import { GripVertical } from "lucide-react"
 import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
+import React from "react";
+import { Button } from "./button";
 
 const ResizablePanelGroup = ({
   className,
@@ -42,4 +44,37 @@ const ResizableHandle = ({
   </ResizablePrimitive.PanelResizeHandle>
 )
 
-export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
+interface ToggleableResizablePanelProps
+  extends React.ComponentProps<typeof ResizablePrimitive.Panel> {
+  children: React.ReactNode
+  toggleButton: React.ReactNode
+}
+
+const ToggleableResizablePanel = React.forwardRef<
+  ResizablePrimitive.ImperativePanelHandle,
+  ToggleableResizablePanelProps
+>(({ children, className, ...props }, ref) => {
+  const innerRef = React.useRef<ResizablePrimitive.ImperativePanelHandle>(null)
+
+  React.useImperativeHandle(ref, () => innerRef.current as ResizablePrimitive.ImperativePanelHandle)
+
+  function toggle() {
+    if (!innerRef.current) return
+    innerRef.current.isExpanded() ? innerRef.current.collapse() : innerRef.current.expand()
+  }
+
+  return (
+    <ResizablePanel ref={innerRef} {...props} className={cn("relative", className)}>
+      <div className="absolute top-0 left-0 w-full p-2 z-10 bg-slate-500 rounded-sm">
+        <Button variant="outline" onClick={toggle}>{props.toggleButton}</Button>
+      </div>
+      {children}
+    </ResizablePanel>
+  )
+}
+)
+
+ToggleableResizablePanel.displayName = "ToggleableResizablePanel"
+
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle, ToggleableResizablePanel }
+
