@@ -4,18 +4,24 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-import RootDraggable, { DraggableBounds, DraggableProps as RootDraggableProps } from "react-draggable"
+import { Button } from "@/components/ui/button"
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { X } from "lucide-react"
+import RootDraggable, { ControlPosition, type DraggableBounds, type DraggableProps as RootDraggableProps } from "react-draggable"
 import { useOnClickOutside } from "../hooks/useOnClickOutside"
 import { DraggableBoundaryContext } from "./draggable-boundary"
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
-import { Button } from "@/components/ui/button"
-import { X, XCircle } from "lucide-react"
+import { motion } from 'framer-motion';
+import { Card } from "@/components/ui/card"
+import { Separator } from "@radix-ui/react-context-menu"
 
 interface DraggableProps extends Partial<RootDraggableProps> {
   children: React.ReactNode
   onFocused?: () => void
   close?: () => void
   zIndex?: number
+  title?: string
+  className?: string
+  id?: string
 }
 
 const Draggable = React.forwardRef<
@@ -24,6 +30,25 @@ const Draggable = React.forwardRef<
 >(({ children, ...props }, ref) => {
 
   const [focused, setFocused] = React.useState(false)
+
+  // load the default position from the id (localStorage)
+  const defaultPosition: ControlPosition | undefined = React.useMemo(() => {
+    const storage = localStorage.getItem(props.id ?? "")
+    if (storage) {
+      const position: { x: number, y: number } = JSON.parse(storage)
+      return position
+    }
+    return undefined;
+  }, [props.id])
+
+  // save the position to the id (localStorage)
+  const onDrag = React.useCallback((_: unknown, { x, y }: { x: number, y: number }) => {
+    localStorage.setItem(props.id ?? "", JSON.stringify({ x, y }))
+  }, [props.id])
+
+  const resetPosition = React.useCallback(() => {
+    localStorage.removeItem(props.id ?? "")
+  }, [props.id])
 
   const parentBoundary = React.useContext(DraggableBoundaryContext)
 
@@ -42,12 +67,13 @@ const Draggable = React.forwardRef<
   function unFocus() {
     if (!focused) return
     setFocused(false)
-    props.onFocused?.()
+
   }
 
   function focus() {
     if (focused) return
     setFocused(true)
+    props.onFocused?.()
   }
 
   React.useLayoutEffect(() => {
@@ -63,56 +89,59 @@ const Draggable = React.forwardRef<
   }, [parentBoundary, parentBoundary.right])
 
   return (
-    <RootDraggable {...props} bounds={boundary} onMouseDown={focus}>
-      <div
-        ref={innerRef}
-        className={cn("absolute")}
-        style={{
-          width: "fit-content",
-          height: "fit-content",
-          zIndex: focused ? 50 + (props.zIndex ?? 0) : 30 + (props.zIndex ?? 0),
-          // when focused add drops shadow, if not focus make it slightly darker
-          boxShadow: focused ? "0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1)" : "0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.1)",
-          filter: focused ? "brightness(1)" : "brightness(0.98)"
-        }}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5 }}
+    >
+      <RootDraggable {...props}
+        defaultPosition={defaultPosition ?? props.defaultPosition}
+        bounds={boundary}
+        onMouseDown={focus}
+        // onDrag={onDrag}
+        onStop={onDrag}
       >
-        {/* traffic light menu */}
-        <div
-          className="flex flex-row gap-2 absolute rounded-md"
+        <Card
+          ref={innerRef}
+          className={cn(
+            focused ? "shadow-md" : "shadow-sm",
+            "absolute rounded-lg border border-gray-200 overflow-hidden border-opacity-50",
+            props.className
+          )}
           style={{
-            top: "-0px",
-            right: "-0px",
+            zIndex: focused ? 50 + (props.zIndex ?? 0) : 30 + (props.zIndex ?? 0),
+            filter: focused ? "brightness(1)" : "brightness(0.98)",
           }}
         >
-
-          <Button
-            onClick={props.close}
-            size={"icon"}
-          >
-            <X size={20} />
-          </Button>
-
-
-
-
-        </div>
-
-        <ContextMenu>
-          <ContextMenuTrigger id="context-menu">
-            {children}
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem
+          <div className="flex justify-between items-center space-x-1 px-2 pt-1 bg-gray-100">
+            <Button
               onClick={props.close}
-            >
-              Close
-            </ContextMenuItem>
-          </ContextMenuContent>
-
-        </ContextMenu>
-      </div>
-
-    </RootDraggable >
+              variant={focused ? "default" : "secondary"}
+              className="w-full h-1"
+            />
+          </div>
+          <ContextMenu>
+            {/* use the width and height extracted */}
+            <ContextMenuTrigger id="context-menu" className={props.className}>
+              {children}
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem
+                onClick={props.close}
+              >
+                Close
+              </ContextMenuItem>
+              <Separator />
+              <ContextMenuItem
+                onClick={resetPosition}
+              >
+                Reset position
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        </Card>
+      </RootDraggable >
+    </motion.div >
   )
 })
 
@@ -121,4 +150,3 @@ Draggable.displayName = "Draggable"
 
 export { Draggable }
 export type { DraggableProps }
-

@@ -1,7 +1,7 @@
 import { Inter as FontSans } from "next/font/google"
 import "./globals.css"
 
-import { CommandMenu } from "@/components/menu/command/command-menu"
+import CommandMenu, { commandMenuItems } from "@/components/menu/command/command-menu"
 import { CommonMenubar } from "@/components/menu/menubar/default-menubar"
 import CommonProvider from "@/components/provider"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup, ToggleableResizablePanel } from "@/components/ui/resizable"
@@ -10,8 +10,9 @@ import { Toaster } from "@/components/ui/sonner"
 import { DraggableBoundary } from "@/lib/draggable/draggable-boundary"
 import { cn } from "@/lib/utils"
 import { Home } from "lucide-react"
-import { Metadata } from "next"
-import React, { Suspense } from "react"
+import type { Metadata } from "next"
+import type React from "react"
+import { Suspense } from "react"
 import Loading from "./loading"
 
 export const fontSans = FontSans({
@@ -41,7 +42,9 @@ function Content({ children }: { children: React.ReactNode }) {
   return (
     <Suspense fallback={<Loading />}>
       <DraggableBoundary className="h-full w-full flex flex-col justify-center" padding={20}>
-        <CommandMenu />
+        <CommandMenu
+          items={commandMenuItems}
+        />
         {children}
         <Toaster />
       </DraggableBoundary>

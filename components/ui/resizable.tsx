@@ -48,6 +48,7 @@ interface ToggleableResizablePanelProps
   extends React.ComponentProps<typeof ResizablePrimitive.Panel> {
   children: React.ReactNode
   toggleButton: React.ReactNode
+  collapsed?: boolean
 }
 
 const ToggleableResizablePanel = React.forwardRef<
@@ -64,10 +65,13 @@ const ToggleableResizablePanel = React.forwardRef<
   }
 
   return (
-    <ResizablePanel ref={innerRef} {...props} className={cn("relative", className)}>
-      <div className="absolute top-0 left-0 w-full p-2 z-10 bg-slate-500 rounded-sm">
-        <Button variant="outline" onClick={toggle}>{props.toggleButton}</Button>
-      </div>
+    <ResizablePanel
+      collapsible
+      defaultSize={props.collapsed ? (props.collapsedSize ? props.collapsedSize - 2 / 3 : undefined) : props.maxSize}
+      ref={innerRef}
+      {...props}
+      className={cn("relative flex flex-col w-64 h-full items-center", className)}>
+      {/* <Button variant="outline" onClick={toggle}>{props.toggleButton}</Button> */}
       {children}
     </ResizablePanel>
   )

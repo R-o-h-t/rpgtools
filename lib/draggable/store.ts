@@ -1,10 +1,11 @@
 'use client'
 
 import { create } from "zustand";
-import { DraggableProps } from "./draggable"
+import type { Draggable, DraggableProps } from "./draggable"
 
 interface DraggableState {
   draggables: Record<string, { showDraggable: ShowDraggable, draggableProps: Partial<DraggableProps> }>,
+  order: string[],
   addDraggable: (
     id: string,
     showDraggable: ShowDraggable,
@@ -18,6 +19,7 @@ type ShowDraggable = (close: () => void) => React.ReactNode;
 
 const useDraggableStore = create<DraggableState>(set => ({
   draggables: {},
+  order: [],
   addDraggable: (
     id: string,
     showDraggable: ShowDraggable,
@@ -27,12 +29,16 @@ const useDraggableStore = create<DraggableState>(set => ({
       draggables: {
         ...state.draggables,
         [id]: { showDraggable, draggableProps }
-      }
+      },
+      order: [...state.order, id]
     })),
   removeDraggable: (id: string) => set(
     state => {
-      const { [id]: _, ...rest } = state.draggables
-      return { draggables: rest }
+      const { [id]: _, ...draggables } = state.draggables
+      return {
+        draggables,
+        order: state.order.filter((orderId) => orderId !== id)
+      }
     })
 }))
 
@@ -40,9 +46,11 @@ const useDraggableStore = create<DraggableState>(set => ({
 
 // expose a method to add a draggable to the store
 function addDraggable(
-  id: string,
-  showDraggable: ShowDraggable,
-  draggableProps: Partial<DraggableProps>
+  { id, showDraggable, draggableProps = {} }: {
+    id: string,
+    showDraggable: ShowDraggable,
+    draggableProps?: Partial<DraggableProps>
+  }
 ) {
   useDraggableStore.getState().addDraggable(
     id,
@@ -52,5 +60,11 @@ function addDraggable(
 }
 
 
-export { useDraggableStore, addDraggable }
+function removeDraggable(id: string) {
+  useDraggableStore.getState().removeDraggable(id)
+}
+
+export { useDraggableStore, addDraggable, removeDraggable }
 export type { ShowDraggable }
+
+

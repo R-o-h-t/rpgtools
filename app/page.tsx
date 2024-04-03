@@ -1,13 +1,16 @@
+
 import TestComponent from "@/components/test";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 
 
 export default function Home() {
 
+
+
   return (
     <main className=" h-full w-full">
       <TestComponent />
-    </main>
+    </main >
   );
 }
 
