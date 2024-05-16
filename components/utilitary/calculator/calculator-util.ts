@@ -49,7 +49,8 @@ export const useCalculator = (): CalculatorUtil => {
       setResult(res);
       setHistory((prev) => [...prev, { result: res, calculus }]);
       setCalculus(res.toString());
-    } catch (e) {
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    } catch (e: any) {
       setError(e.message);
     }
   };
@@ -116,6 +117,7 @@ function calculate(calculus: string): number {
     formattedCalculus = formattedCalculus.replace(`(${subCalculus})`, calculate(subCalculus).toString());
   }
 
+  // biome-ignore lint/security/noGlobalEval: <explanation>
   const evalCalculus = eval(formattedCalculus);
   if (Number.isNaN(evalCalculus)) {
     throw new Error("ERROR");
